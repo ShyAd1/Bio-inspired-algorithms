@@ -88,6 +88,12 @@ def variable_aleatoria():
 def cruza_uniforme(padre1, padre2):
     hijo1 = padre1.copy()
     hijo2 = padre2.copy()
+
+    if variable_aleatoria() > PROB_CRUZA:
+        # No se realiza cruza, los hijos son iguales a los padres,
+        # basicamente pasan los padres a la siguiente generacion sin cambios
+        return hijo1, hijo2
+
     for i in range(len(padre1)):
         if VARIABLES_ALEATORIAS[i] <= UMBRAL_CRUZA:
             hijo1[i] = padre1[i]
@@ -99,6 +105,25 @@ def cruza_uniforme(padre1, padre2):
             hijo2[i] = padre2[i]
         else:
             hijo2[i] = padre1[i]
+
+    for i in range(0, len(OBJETOS)):
+        VARIABLES_ALEATORIAS[i] = variable_aleatoria()
+    print("\nVariables aleatorias para mutacion del hijo 1:")
+    print(VARIABLES_ALEATORIAS)
+
+    print(f"Hijo 1 antes de mutacion: {hijo1}")
+
+    hijo1 = mutacion_uniforme(hijo1)
+
+    for i in range(0, len(OBJETOS)):
+        VARIABLES_ALEATORIAS[i] = variable_aleatoria()
+    print("\nVariables aleatorias para mutacion del hijo 2:")
+    print(VARIABLES_ALEATORIAS)
+
+    print(f"Hijo 2 antes de mutacion: {hijo2}")
+
+    hijo2 = mutacion_uniforme(hijo2)
+
     return hijo1, hijo2
 
 
@@ -160,24 +185,6 @@ if __name__ == "__main__":
             padre1 = PADRES_SELECCIONADOS[i]
             padre2 = PADRES_SELECCIONADOS[i + 1]
             hijo1, hijo2 = cruza_uniforme(padre1, padre2)
-
-            for i in range(0, len(OBJETOS)):
-                VARIABLES_ALEATORIAS[i] = variable_aleatoria()
-            print("\nVariables aleatorias para mutacion del hijo 1:")
-            print(VARIABLES_ALEATORIAS)
-
-            print(f"Hijo 1 antes de mutacion: {hijo1}")
-
-            hijo1 = mutacion_uniforme(hijo1)
-
-            for i in range(0, len(OBJETOS)):
-                VARIABLES_ALEATORIAS[i] = variable_aleatoria()
-            print("\nVariables aleatorias para mutacion del hijo 2:")
-            print(VARIABLES_ALEATORIAS)
-
-            print(f"Hijo 2 antes de mutacion: {hijo2}")
-
-            hijo2 = mutacion_uniforme(hijo2)
 
             poblacion.append(hijo1)
             poblacion.append(hijo2)
