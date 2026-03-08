@@ -74,11 +74,11 @@ def tabla_ruleta(poblacion):
     fitness_total = sum(calcular_fitness(individuo)[0] for individuo in poblacion)
     print("Individuo\t\t\tFitness\t\tProbabilidad\tProbabilidad Acumulada")
     prob_acumulada = 0
-    for individuo in poblacion:
+    for i, individuo in enumerate(poblacion):
         fitness, _ = calcular_fitness(individuo)
         probabilidad = fitness / fitness_total if fitness_total > 0 else 0
         prob_acumulada += probabilidad
-        PROBABILIDADES[poblacion.index(individuo)] = prob_acumulada
+        PROBABILIDADES[i] = prob_acumulada
         print(f"{individuo}\t\t{fitness}\t\t{probabilidad:.4f}\t\t{prob_acumulada:.4f}")
 
 
@@ -86,18 +86,27 @@ def variable_aleatoria():
     return random.uniform(0, 1)
 
 
+def seleccionar_indice_ruleta(probabilidades_acumuladas):
+    r = variable_aleatoria()
+    for i, prob in enumerate(probabilidades_acumuladas):
+        if r <= prob:
+            return i
+    # Fallback por posibles redondeos en flotantes.
+    return len(probabilidades_acumuladas) - 1
+
+
 def cruza_uniforme(padre1, padre2):
     # Realizar cruza uniforme entre dos padres para generar dos hijos dentro de
     # la maxima capacidad de la mochila y cumpliendo las restricciones de al
     # menos 3 Love Potions y 2 Skiving Snackbox
     while True:
-        hijo1 = padre1.copy()
-        hijo2 = padre2.copy()
-
         if variable_aleatoria() > PROB_CRUZA:
             # No se realiza cruza, los hijos son iguales a los padres,
             # basicamente pasan los padres a la siguiente generacion sin cambios
-            return hijo1, hijo2
+            return padre1, padre2
+
+        hijo1 = padre1.copy()
+        hijo2 = padre2.copy()
 
         VARIABLES_ALEATORIAS = [0] * len(
             OBJETOS
@@ -215,22 +224,15 @@ if __name__ == "__main__":
 
         while (
             len(nueva_poblacion) < TAM_POBALACION
-        ):  # Generar hijos hasta tener el doble de la población actual
-            r1 = variable_aleatoria()
-            r2 = variable_aleatoria()
+        ):  # Generar hijos hasta tener la pobalacion completa
+            # Seleccionar 2 padres por ruleta forzando índices distintos.
+            indice_padre1 = seleccionar_indice_ruleta(PROBABILIDADES)
+            indice_padre2 = seleccionar_indice_ruleta(PROBABILIDADES)
+            while indice_padre2 == indice_padre1:
+                indice_padre2 = seleccionar_indice_ruleta(PROBABILIDADES)
 
-            padre1 = None
-            padre2 = None
-
-            # Seleccionar 2 padres utilizando la tabla de ruleta sin que se
-            # seleccione el mismo padre dos veces
-            for i in range(TAM_POBALACION):
-                if r1 <= PROBABILIDADES[i] and padre1 is None:
-                    padre1 = poblacion[i]
-                if r2 <= PROBABILIDADES[i] and padre2 is None:
-                    padre2 = poblacion[i]
-                if padre1 is not None and padre2 is not None:
-                    break
+            padre1 = poblacion[indice_padre1]
+            padre2 = poblacion[indice_padre2]
 
             # Cruza uniforme para generar dos hijos
             hijo1, hijo2 = cruza_uniforme(padre1, padre2)
