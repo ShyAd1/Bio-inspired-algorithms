@@ -1,0 +1,8 @@
+digraph program {
+node [style=filled]
+0 [label="add", fillcolor="#136ed4"] ;
+1 [label="-0.999", fillcolor="#60a6f6"] ;
+2 [label="X1", fillcolor="#60a6f6"] ;
+0 -> 2 ;
+0 -> 1 ;
+}
