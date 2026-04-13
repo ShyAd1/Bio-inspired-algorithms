@@ -44,35 +44,21 @@ def actualizacion_posicion(posicion, velocidad):
         elif nueva_posicion[i] > RANGO_POSICION[1]:
             nueva_posicion[i] = RANGO_POSICION[1]
 
-    # Aceptar el cambio solo si mejora la función objetivo.
-    if funcion_objetivo(*nueva_posicion) < funcion_objetivo(*posicion):
-        return nueva_posicion
-    return posicion
+    return nueva_posicion
 
 
 def calcular_mejor_posicion_global(particulas):
     mejor_posicion_global = None
     mejor_valor_global = float("inf")
+
     for particula in particulas:
-        valor_actual = funcion_objetivo(*particula["Posicion"])
-        # Minizar la función objetivo, por lo que buscamos el valor más bajo
-        if valor_actual < mejor_valor_global:
-            mejor_valor_global = valor_actual
-            mejor_posicion_global = particula["Posicion"]
+        if particula["pBest_valor"] < mejor_valor_global:
+            mejor_valor_global = particula["pBest_valor"]
+            mejor_posicion_global = particula["pBest_posicion"]
     print(
         f"\nMejor posición global: {mejor_posicion_global}, Valor: {mejor_valor_global}"
     )
     return mejor_posicion_global, mejor_valor_global
-
-
-def calcular_arreglo_posiciones(particulas):
-    arreglo_posiciones = []
-    for particula in particulas:
-        arreglo_posiciones.append(particula["Posicion"])
-        print(
-            f"Particula {particula['Particula']}, Valor: {funcion_objetivo(*particula['Posicion'])}"
-        )
-    return arreglo_posiciones
 
 
 def generar_primeras_particulas(num_particulas, tipo_velocidad):
@@ -89,8 +75,15 @@ def generar_primeras_particulas(num_particulas, tipo_velocidad):
             ]
         elif tipo_velocidad == "Cero":
             velocidad = [0, 0]
+        valor_inicial = funcion_objetivo(*posicion)
         particulas.append(
-            {"Particula": i, "Posicion": posicion, "Velocidad": velocidad}
+            {
+                "Particula": i,
+                "Posicion": posicion,
+                "Velocidad": velocidad,
+                "pBest_posicion": posicion.copy(),
+                "pBest_valor": valor_inicial,
+            }
         )
     print("Partículas iniciales:")
     for particula in particulas:
@@ -166,19 +159,23 @@ def main():
 
         for particula in particulas:
             # Actualizar velocidad
-            nueva_velocidad = actualizacion_velocidad_global(
+            particula["Velocidad"] = actualizacion_velocidad_global(
                 particula["Velocidad"],
                 particula["Posicion"],
-                particula["Posicion"],  # Mejor posición local es la actual
+                particula["pBest_posicion"],  # Mejor posición local es la actual
                 mejor_posicion_global,
             )
-            particula["Velocidad"] = nueva_velocidad
 
             # Actualizar posición
-            nueva_posicion = actualizacion_posicion(
-                particula["Posicion"], nueva_velocidad
+            particula["Posicion"] = actualizacion_posicion(
+                particula["Posicion"], particula["Velocidad"]
             )
-            particula["Posicion"] = nueva_posicion
+
+            # Actualizar mejor posición local (pBest)
+            valor_actual = funcion_objetivo(*particula["Posicion"])
+            if valor_actual < particula["pBest_valor"]:
+                particula["pBest_valor"] = valor_actual
+                particula["pBest_posicion"] = particula["Posicion"].copy()
 
             print(
                 f"Particula {particula['Particula']}, Posición: {particula['Posicion']}, Velocidad: {particula['Velocidad']}"
