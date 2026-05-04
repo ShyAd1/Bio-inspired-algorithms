@@ -23,11 +23,13 @@ def actualizacion_velocidad_global(
     velocidad, posicion, mejor_posicion_particula, mejor_posicion_global
 ):
     nueva_velocidad = []
+    r1 = random.uniform(0, 1)
+    r2 = random.uniform(0, 1)
     for i in range(len(velocidad)):
         v_i = (
             A * velocidad[i]
-            + B_1 * random.uniform(0, 1) * (mejor_posicion_particula[i] - posicion[i])
-            + B_2 * random.uniform(0, 1) * (mejor_posicion_global[i] - posicion[i])
+            + B_1 * r1 * (mejor_posicion_particula[i] - posicion[i])
+            + B_2 * r2 * (mejor_posicion_global[i] - posicion[i])
         )
         nueva_velocidad.append(v_i)
     return nueva_velocidad
@@ -52,9 +54,10 @@ def calcular_mejor_posicion_global(particulas):
     mejor_valor_global = float("inf")
 
     for particula in particulas:
-        if particula["pBest_valor"] < mejor_valor_global:
-            mejor_valor_global = particula["pBest_valor"]
-            mejor_posicion_global = particula["pBest_posicion"]
+        valor_actual = funcion_objetivo(*particula["Posicion"])
+        if valor_actual < mejor_valor_global:
+            mejor_valor_global = valor_actual
+            mejor_posicion_global = particula["Posicion"]
     print(
         f"\nMejor posición global: {mejor_posicion_global}, Valor: {mejor_valor_global}"
     )
