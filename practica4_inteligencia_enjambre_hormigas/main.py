@@ -2,8 +2,6 @@ import random
 import numpy as np
 from time import sleep
 
-# import matplotlib.pyplot as plt
-
 """Variables globales"""
 rho = 0.2  # Tasa de evaporación
 Q = 1  # Cantidad de feromona depositada por cada hormiga
