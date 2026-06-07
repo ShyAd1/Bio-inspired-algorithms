@@ -65,14 +65,14 @@ def generate_neighbor(x, xk):
     r = random.uniform(0.0, 1.0)
     v[j] = int(x[j] + r * (x[j] - xk[j]))
 
-    # Si se sale de los límites del item, se marca como inválido
+    # Si se sale de los límites del item, se lleva al limite correspondiente
     it = items[j]
     if v[j] < it.lb:
-        return v, False
+        v[j] = it.lb
     elif v[j] > it.ub:
-        return v, False
+        v[j] = it.ub
 
-    # Si excede la capacidad total, también se considera inválido
+    # Si excede la capacidad total, se considera inválido
     if total_weight(v) > CAPACITY:
         return v, False
 
@@ -126,9 +126,7 @@ def abc_knapsack(seed=42):
 
             if not valid:
                 trials[i] += 1
-                continue
-
-            if fitness(candidate) > fitness(food_sources[i]):
+            elif fitness(candidate) > fitness(food_sources[i]):
                 food_sources[i] = candidate
                 trials[i] = 0
             else:
@@ -160,9 +158,7 @@ def abc_knapsack(seed=42):
 
             if not valid:
                 trials[i] += 1
-                continue
-
-            if fitness(candidate) > fitness(food_sources[i]):
+            elif fitness(candidate) > fitness(food_sources[i]):
                 food_sources[i] = candidate
                 trials[i] = 0
             else:
@@ -217,7 +213,7 @@ def abc_knapsack(seed=42):
 
 
 if __name__ == "__main__":
-    best_sol, best_value, best_weight = abc_knapsack(seed=42)
+    best_sol, best_value, best_weight = abc_knapsack(seed=random.randint(0, 100000))
 
     print("=== Mejor solucion encontrada (ABC) ===")
     for it, q in zip(items, best_sol):
