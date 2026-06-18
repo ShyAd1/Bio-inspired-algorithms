@@ -1,0 +1,18 @@
+{
+  "timestamp": "2026-06-15T20:21:47.998620",
+  "simulation": {
+    "total_agents": 30,
+    "evacuated": 30,
+    "evacuation_rate": 100.0,
+    "total_time_seconds": 0.1
+  },
+  "timing": {
+    "average_wait_time": 0.0,
+    "average_evacuation_time": 8.739999999999984
+  },
+  "efficiency": {
+    "max_congestion": 0.0,
+    "efficiency_rating": 100.0,
+    "critical_bottlenecks": []
+  }
+}
