@@ -131,10 +131,22 @@ class ACOPanel(QWidget):
 
     def _fill_table(self, table: QTableWidget, labels: list, mat: np.ndarray):
         n = len(labels)
-        table.setRowCount(n)
-        table.setColumnCount(n)
-        table.setHorizontalHeaderLabels(labels)
-        table.setVerticalHeaderLabels(labels)
+        
+        # 1. Apagamos el redibujado visual para que PyQt no se asfixie
+        table.setUpdatesEnabled(False)
+        
+        # Solo reconfiguramos encabezados si cambió el número de nodos
+        if table.rowCount() != n:
+            table.setRowCount(n)
+            table.setColumnCount(n)
+            table.setHorizontalHeaderLabels(labels)
+            table.setVerticalHeaderLabels(labels)
+            
+            # 2. QUITAMOS el lentísimo ResizeToContents y usamos tamaños fijos
+            table.horizontalHeader().setDefaultSectionSize(55)
+            table.verticalHeader().setDefaultSectionSize(25)
+
+        # 3. Llenamos los datos reciclando celdas
         for i in range(n):
             for j in range(n):
                 v = mat[i][j]
@@ -144,11 +156,19 @@ class ACOPanel(QWidget):
                     text = "0"
                 else:
                     text = f"{v:.2f}"
-                item = QTableWidgetItem(text)
-                item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                table.setItem(i, j, item)
-        table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
-        table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+                
+                item = table.item(i, j)
+                if item is None:
+                    # Si la celda no existe, la creamos
+                    item = QTableWidgetItem(text)
+                    item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                    table.setItem(i, j, item)
+                else:
+                    # Si ya existe, SOLO le actualizamos el texto
+                    item.setText(text)
+                    
+        # 4. Volvemos a encender la pantalla de la tabla
+        table.setUpdatesEnabled(True)
 
     def _fill_phero_table(self, table: QTableWidget, labels: list, mat: np.ndarray):
         n = len(labels)
