@@ -570,19 +570,11 @@
       ]
     },
     {
-      "id": "N_24",
-      "floor": 1,
-      "row": 2,
-      "col": 30,
-      "connections": []
-    },
-    {
       "id": "N_25",
       "floor": 1,
       "row": 9,
       "col": 30,
       "connections": [
-        "N_24",
         "L_15",
         "L_16"
       ]
@@ -593,7 +585,6 @@
       "row": 10,
       "col": 30,
       "connections": [
-        "N_24",
         "L_16",
         "L_15"
       ]
@@ -675,8 +666,7 @@
       "col": 2,
       "connections": [
         "L_14",
-        "L_13",
-        "N_36"
+        "L_13"
       ]
     },
     {
@@ -686,16 +676,28 @@
       "col": 2,
       "connections": [
         "L_13",
-        "L_14",
-        "N_36"
+        "L_14"
+      ]
+    },
+    {
+      "id": "N_24",
+      "floor": 1,
+      "row": 2,
+      "col": 2,
+      "connections": [
+        "N_35",
+        "N_34"
       ]
     },
     {
       "id": "N_36",
       "floor": 1,
       "row": 2,
-      "col": 2,
-      "connections": []
+      "col": 30,
+      "connections": [
+        "N_25",
+        "N_26"
+      ]
     }
   ]
 }

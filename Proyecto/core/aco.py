@@ -108,10 +108,10 @@ class ACOSolver:
         else:
             probabilidades /= suma_total
 
-        # 3. Calcular la probabilidad acumulada (Equivalente a np.cumsum en main.py)
+        # 3. Calcular la probabilidad acumulada
         acumulado_probabilidades = np.cumsum(probabilidades)
 
-        # 4. Escoger la siguiente ciudad usando la ruleta (Equivalente a escoger_siguiente_ciudad)
+        # 4. Escoger la siguiente ciudad usando la ruleta
         variable_aleatoria = random.uniform(0, 1)
         indice_elegido = np.argmax(acumulado_probabilidades >= variable_aleatoria)
 
@@ -168,7 +168,6 @@ class ACOSolver:
         for iteration in range(self.iterations):
             if self._stop_flag: break
 
-            # --- NUEVA LÓGICA: Hormigas caminan en paralelo ---
             # Inicializamos cada hormiga en un nodo S
             paths = {i: [self.spawn_ids[i % len(self.spawn_ids)]] for i in range(self.num_ants)}
             visited = {i: {paths[i][0]} for i in range(self.num_ants)}

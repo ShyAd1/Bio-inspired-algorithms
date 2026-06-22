@@ -52,7 +52,7 @@ class ACOPanel(QWidget):
         form.setLabelAlignment(Qt.AlignmentFlag.AlignLeft)
 
         self.spin_iter   = QtWidgets.QSpinBox();        self.spin_iter.setRange(1, 500);    self.spin_iter.setSingleStep(10);    self.spin_iter.setValue(5)
-        self.spin_ants   = QtWidgets.QSpinBox();        self.spin_ants.setRange(0, 500);    self.spin_ants.setSingleStep(10);    self.spin_ants.setValue(100)
+        self.spin_ants   = QtWidgets.QSpinBox();        self.spin_ants.setRange(0, 2000);    self.spin_ants.setSingleStep(50);    self.spin_ants.setValue(100)
         self.dspin_rho   = QtWidgets.QDoubleSpinBox();  self.dspin_rho.setRange(0.01, 1.0); self.dspin_rho.setSingleStep(0.05); self.dspin_rho.setValue(0.2)
         self.dspin_Q     = QtWidgets.QDoubleSpinBox();  self.dspin_Q.setRange(0.1, 100.0);  self.dspin_Q.setSingleStep(0.5);   self.dspin_Q.setValue(1.0)
         self.dspin_alpha = QtWidgets.QDoubleSpinBox();  self.dspin_alpha.setRange(0.1, 10.0); self.dspin_alpha.setSingleStep(0.1); self.dspin_alpha.setValue(1.5)
@@ -226,7 +226,7 @@ class ACOPanel(QWidget):
 
         def step_callback(positions):
             import time
-            time.sleep(0.250)  # Pausa de 250ms para verlas caminar
+            time.sleep(0.500)  # Pausa de 500ms para verlas caminar
             self._signals.step.emit(positions)
 
         def iter_callback(*args):

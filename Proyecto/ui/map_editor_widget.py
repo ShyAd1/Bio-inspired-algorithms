@@ -98,7 +98,7 @@ class MapEditorWidget(QWidget):
     def _ensure_surface(self):
         w, h = max(1, self.width()), max(1, self.height())
         if self._surf is None or self._surf.get_size() != (w, h): self._surf = pygame.Surface((w, h))
-        if self._font is None: self._font = pygame.font.Font(None, 14)
+        if self._font is None: self._font = pygame.font.Font(None, 20)
 
     def _node_color(self, node: Node):
         p = node.prefix()
@@ -174,7 +174,7 @@ class MapEditorWidget(QWidget):
             if node.node_id in (self.selected_node_id, self.connect_src_id):
                 pygame.draw.circle(surf, C_SEL, (x, y), r + 3, 2)
                 
-            if cs >= 14 and self._font:
+            if cs >= 22 and self._font:
                 txt = self._font.render(node.node_id, True, C_TEXT_DARK)
                 surf.blit(txt, (x - txt.get_width() // 2, y - txt.get_height() // 2))
 
@@ -185,7 +185,7 @@ class MapEditorWidget(QWidget):
                 if node.floor != f: continue # Solo dibuja hormigas si están en la planta actual
                 x, y = self._cell_center(node.row, node.col)
                 dibujo_x, dibujo_y = x + random.randint(-8, 8), y + random.randint(-8, 8)
-                pygame.draw.circle(surf, (255, 140, 0), (dibujo_x, dibujo_y), 5)
+                pygame.draw.circle(surf, (0,0,0), (dibujo_x, dibujo_y), 5)
                 pygame.draw.circle(surf, (255, 255, 255), (dibujo_x, dibujo_y), 6, 1)
 
     def paintEvent(self, event):
@@ -207,7 +207,10 @@ class MapEditorWidget(QWidget):
 
         if btn == Qt.MouseButton.MiddleButton:
             self._panning = True
-            self._pan_start, self._pan_offset_start = (sx, sy), (self._offset_x, self._offset_y)
+            self._pan_start = (sx, sy)
+            self._pan_offset_start = (self._offset_x, self._offset_y)
+            
+            self.setCursor(Qt.CursorShape.ClosedHandCursor)
             return
 
         if btn == Qt.MouseButton.RightButton:
@@ -283,7 +286,8 @@ class MapEditorWidget(QWidget):
         if self._panning:
             self._offset_x = self._pan_offset_start[0] + (sx - self._pan_start[0])
             self._offset_y = self._pan_offset_start[1] + (sy - self._pan_start[1])
-            if needs_update: self.update()
+
+            self.update()
             return
 
         # Pintar paredes arrastrando
@@ -306,12 +310,16 @@ class MapEditorWidget(QWidget):
 
     def mouseReleaseEvent(self, event): 
         self._painting = False
+
+        if self._panning:
+            self.setCursor(Qt.CursorShape.ArrowCursor)
+            
         self._panning = False
         
         # Feedback al soltar el nodo
         if self._moving_node_id:
             self.status_message.emit(f"Nodo {self._moving_node_id} soltado en nueva posición")
-            
+
         self._moving_node_id = None
         
         # Una vez que soltamos el ratón, AHORA SÍ recalculamos matemáticas y tablas

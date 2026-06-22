@@ -183,13 +183,35 @@ class MapModel:
                     mat[i][j] = mat[j][i] = dist
         return labels, mat
 
+    # def build_graph(self) -> tuple[dict, list, set, list]:
+    #     graph: dict = {nid: [] for nid in self.nodes}
+    #     for node in self.nodes.values():
+    #         for conn_id in node.connections:
+    #             if conn_id in self.nodes:
+    #                 d = self.euclidean_distance(node, self.nodes[conn_id])
+    #                 graph[node.node_id].append((conn_id, d))
+    #     spawn_ids = sorted([nid for nid, n in self.nodes.items() if n.prefix() == PREFIX_S], key=lambda x: self.nodes[x].number() or 0)
+    #     exit_ids = {nid for nid, n in self.nodes.items() if n.prefix() == PREFIX_E}
+    #     return graph, spawn_ids, exit_ids, list(self.nodes.keys())
     def build_graph(self) -> tuple[dict, list, set, list]:
         graph: dict = {nid: [] for nid in self.nodes}
         for node in self.nodes.values():
             for conn_id in node.connections:
                 if conn_id in self.nodes:
                     d = self.euclidean_distance(node, self.nodes[conn_id])
+                    
+                    # 1. Agregamos la conexión original (Ida)
                     graph[node.node_id].append((conn_id, d))
+                    
+                    # 2. NUEVO: Magia de Doble Sentido
+                    # Si ambos nodos son pasillos (N) o escaleras (L), permitimos que se pueda caminar de regreso.
+                    # Ignoramos los S y E porque S solo es salida y E solo es llegada.
+                    target_node = self.nodes[conn_id]
+                    if node.prefix() in (PREFIX_N, PREFIX_L) and target_node.prefix() in (PREFIX_N, PREFIX_L):
+                        # Verificamos que no exista ya la conexión para no duplicarla
+                        if not any(n == node.node_id for n, _ in graph[conn_id]):
+                            graph[conn_id].append((node.node_id, d))
+
         spawn_ids = sorted([nid for nid, n in self.nodes.items() if n.prefix() == PREFIX_S], key=lambda x: self.nodes[x].number() or 0)
         exit_ids = {nid for nid, n in self.nodes.items() if n.prefix() == PREFIX_E}
         return graph, spawn_ids, exit_ids, list(self.nodes.keys())
