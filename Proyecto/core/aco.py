@@ -50,13 +50,15 @@ class ACOSolver:
         on_iteration: Optional[Callable] = None,
         on_done: Optional[Callable] = None,
         on_step: Optional[Callable] = None,
+        # --- NUEVOS PARÁMETROS DE TRÁFICO ---
+        congestion_threshold: int = 5,    # A partir de 5 hormigas, es "embotellamiento"
+        congestion_penalty: float = 10.0, # Divide el atractivo de la ruta entre 10
     ):
         self.graph = graph
         self.spawn_ids = spawn_ids
         self.exit_ids = exit_ids
         self.all_node_ids = all_node_ids
         self.idx = {nid: i for i, nid in enumerate(all_node_ids)}
-        n = len(all_node_ids)
 
         self.rho = rho
         self.Q = Q
@@ -67,7 +69,11 @@ class ACOSolver:
         self.on_iteration = on_iteration
         self.on_done = on_done
         self.on_step = on_step
-        self.pheromones = np.ones((n, n)) * 0.1
+        
+        self.congestion_threshold = congestion_threshold
+        self.congestion_penalty = congestion_penalty
+
+        self.pheromones = np.ones((len(all_node_ids), len(all_node_ids))) * 0.1
         self.best_path: Optional[list[str]] = None
         self.best_distance: float = float("inf")
         self._stop_flag = False
@@ -75,9 +81,8 @@ class ACOSolver:
     def stop(self):
         self._stop_flag = True
 
-    def _next_node(self, current: str, visited: set) -> Optional[str]:
-        """Pick next node using ACO probability (Ruleta vectorizada con NumPy)."""
-        # Obtenemos los vecinos válidos (nodos conectados, no visitados y con distancia > 0)
+    def _next_node(self, current: str, visited: set, occupancy: dict) -> Optional[str]:
+        """Pick next node using ACO probability with congestion penalty."""
         neighbours = [
             (nid, d) for nid, d in self.graph.get(current, [])
             if nid not in visited and d > 0
@@ -89,29 +94,31 @@ class ACOSolver:
         probabilidades = []
         nodos_posibles = []
 
-        # 1. Calcular tau y eta para los vecinos (Equivalente a calcular_probabilidades)
         for nid, d in neighbours:
             ni = self.idx[nid]
             tau = self.pheromones[ci][ni] ** self.alpha
             eta = (1.0 / d) ** self.beta
-            probabilidades.append(tau * eta)
+            peso = tau * eta
+            ants_there = occupancy.get(nid, 0)
+            
+            if ants_there >= self.congestion_threshold:
+                # Si hay tráfico, dividimos el atractivo drásticamente.
+                # Entre más hormigas haya, peor se vuelve la penalización.
+                factor = self.congestion_penalty * (ants_there - self.congestion_threshold + 1)
+                peso /= factor
+                
+            probabilidades.append(peso)
             nodos_posibles.append(nid)
 
-        # 2. Normalizar las probabilidades
         probabilidades = np.array(probabilidades)
         suma_total = probabilidades.sum()
 
         if suma_total == 0:
-            # Prevención de división por cero: Si todas las opciones dan 0, 
-            # asignamos probabilidad equitativa para que la ruleta no colapse.
             probabilidades = np.ones(len(nodos_posibles)) / len(nodos_posibles)
         else:
             probabilidades /= suma_total
 
-        # 3. Calcular la probabilidad acumulada
         acumulado_probabilidades = np.cumsum(probabilidades)
-
-        # 4. Escoger la siguiente ciudad usando la ruleta
         variable_aleatoria = random.uniform(0, 1)
         indice_elegido = np.argmax(acumulado_probabilidades >= variable_aleatoria)
 
@@ -181,7 +188,15 @@ class ACOSolver:
                 if self._stop_flag: break
                 
                 active_ants = 0
-                current_positions = {}
+                
+                # 1. Radar de tráfico: contamos cuántas hormigas hay en cada nodo para aplicar penalizaciones por congestión
+                node_occupancy = {}
+                for ant, stat in status.items():
+                    if stat == "walking":
+                        pos = paths[ant][-1]
+                        node_occupancy[pos] = node_occupancy.get(pos, 0) + 1
+
+                step_positions = {}
                 
                 for ant in range(self.num_ants):
                     if status[ant] != "walking": continue
@@ -191,24 +206,28 @@ class ACOSolver:
                     
                     if current in self.exit_ids:
                         status[ant] = "success"
-                        current_positions[ant] = current
+                        step_positions[ant] = current
+                        node_occupancy[current] = max(0, node_occupancy.get(current, 0) - 1)
                         continue
 
-                    nxt = self._next_node(current, visited[ant])
+                    # Le pasamos el radar de tráfico al cerebro de la hormiga
+                    nxt = self._next_node(current, visited[ant], node_occupancy)
                     if nxt is None:
                         status[ant] = "stuck"
                         continue
 
-                    # Obtener distancia de la arista
                     d = next((dist for nid, dist in self.graph.get(current, []) if nid == nxt), 1.0)
                     paths[ant].append(nxt)
                     visited[ant].add(nxt)
                     distances[ant] += d
-                    current_positions[ant] = nxt
+                    step_positions[ant] = nxt
+                    
+                    # 2. Actualizamos el radar "en vivo": la hormiga dejó su celda anterior y ocupó la nueva
+                    node_occupancy[current] = max(0, node_occupancy.get(current, 0) - 1)
+                    node_occupancy[nxt] = node_occupancy.get(nxt, 0) + 1
 
-                # Si hay hormigas moviéndose, mandamos la señal a la interfaz
                 if active_ants > 0 and self.on_step:
-                    self.on_step(current_positions)
+                    self.on_step(step_positions)
                 
                 if active_ants == 0:
                     break  # Todas terminaron o se atascaron
