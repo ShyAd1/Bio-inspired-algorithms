@@ -1,9 +1,3 @@
-"""
-Conway's Game of Life — Versión Unificada (Todo en PyQt6)
-- Navegación: Clic derecho para arrastrar la cámara.
-- Zoom: Rueda del ratón para acercar/alejar la vista al cursor.
-"""
-
 import sys
 import numpy as np
 from PyQt6.QtWidgets import (
@@ -15,7 +9,7 @@ from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QPointF, QRectF
 from PyQt6.QtGui import QFont, QPainter, QColor, QBrush, QPen
 
 
-# ── Paleta de colores (Escala de Grises) ──────────────────────────────────────
+# Paleta de colores (Escala de Grises)
 BG_DARK   = "#222222"
 BG_MID    = "#2d2d2d"
 BG_PANEL  = "#3a3a3a"
@@ -28,7 +22,7 @@ CELL_DEAD  = QColor(34, 34, 34)
 GRID_COLOR = QColor(70, 70, 70)
 
 
-# ── Lógica del juego (NumPy) ──────────────────────────────────────────────────
+# Lógica del juego (NumPy)
 class GameOfLife:
     def __init__(self, rows: int, cols: int, boundary: str = "toroid"):
         self.rows = rows
@@ -70,18 +64,15 @@ class GameOfLife:
                 if dr == 0 and dc == 0:
                     continue
                 
-                # ── CASO A: Toroide (Modo Pac-Man) ──
                 if self.boundary == "toroid":
-                    # np.roll "empuja" toda la matriz en la dirección que le digamos.
-                    # Lo que se sale por un borde, entra mágicamente por el borde opuesto.
+                    # Lo que se sale por un borde.
                     shifted_grid = np.roll(self.grid, shift=dr, axis=0) # Empuja verticalmente
                     shifted_grid = np.roll(shifted_grid, shift=dc, axis=1) # Empuja horizontalmente
                     
                     neighbors += shifted_grid
 
-                # ── CASO B: Borde Muerto (Paredes vacías) ──
                 else: 
-                    # Como nuestra matriz padded_grid es más grande (tiene un marco extra),
+                    # Como nuestra matriz es más grande (tiene marco extra),
                     # tomamos un "recorte" del tamaño exacto de la pantalla, pero desplazado.
                     row_start = 1 + dr
                     row_end   = row_start + self.rows
@@ -91,7 +82,6 @@ class GameOfLife:
                     # Sumamos ese recorte desplazado a nuestro conteo de vecinos
                     neighbors += padded_grid[row_start:row_end, col_start:col_end]
 
-        # ── APLICAR LAS REGLAS DE CONWAY ──
         # Regla 1: Una celda muerta (0) con exactamente 3 vecinos, NACE.
         born = (neighbors == 3) & (self.grid == 0)
         
@@ -109,7 +99,7 @@ class GameOfLife:
         self.population = int(self.grid.sum())
 
 
-# ── Widget del Lienzo (Cámara interactiva y Zoom) ─────────────────────────────
+# Widget del Lienzo (Cámara interactiva y Zoom)
 class GridWidget(QWidget):
     def __init__(self, game_logic):
         super().__init__()
@@ -219,7 +209,7 @@ class GridWidget(QWidget):
             self.setCursor(Qt.CursorShape.ArrowCursor)
 
 
-# ── Ventana Principal Unificada ───────────────────────────────────────────────
+# Ventana Principal 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -258,7 +248,7 @@ class MainWindow(QMainWindow):
         main_layout.setContentsMargins(10, 10, 10, 10)
         main_layout.setSpacing(15)
 
-        # ── PANEL LATERAL ──
+        # PANEL LATERAL
         side_panel = QWidget()
         side_panel.setFixedWidth(300)
         side_layout = QVBoxLayout(side_panel)
@@ -353,13 +343,13 @@ class MainWindow(QMainWindow):
 
         side_layout.addStretch()
         
-        hint = QLabel("• Clic Izquierdo: Dibujar celdas\n• Clic Derecho: Arrastrar cámara\n• Rueda del Ratón: Zoom")
+        hint = QLabel("- Clic Izquierdo: Dibujar celdas\n- Clic Derecho: Arrastrar cámara\n- Rueda del Ratón: Zoom")
         hint.setWordWrap(True)
         hint.setAlignment(Qt.AlignmentFlag.AlignLeft)
         hint.setStyleSheet(f"color: {TEXT_DIM}; font-size: 12px; margin-left: 5px;")
         side_layout.addWidget(hint)
 
-        # ── LIENZO PRINCIPAL ──
+        # LIENZO PRINCIPAL
         self.canvas = GridWidget(self.game)
         main_layout.addWidget(side_panel)
         main_layout.addWidget(self.canvas)
@@ -429,7 +419,7 @@ class MainWindow(QMainWindow):
         self.lbl_info.setText(f"Gen: {self.game.generation:,}  |  Pob: {self.game.population:,}")
 
 
-# ── Punto de entrada ──────────────────────────────────────────────────────────
+# Punto de entrada
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
